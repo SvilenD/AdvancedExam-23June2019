@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
 public class BirdController : MonoBehaviour
 {
@@ -11,8 +12,10 @@ public class BirdController : MonoBehaviour
     private bool isStarted;
     private bool hasFlapped;
     private bool isDead;
+    private float score;
 
     public GameObject GameOverObject { get; private set; }
+    //public GameObject ScoreObject { get; private set; }
 
     // Start is called before the first frame update
     public void Start()
@@ -24,6 +27,8 @@ public class BirdController : MonoBehaviour
         this.rBody.gravityScale = 0;
         this.GameOverObject = GameObject.FindGameObjectWithTag("Finish");
         GameOverObject.SetActive(false);
+        //this.ScoreObject = GameObject.FindGameObjectWithTag("Score");
+        //ScoreObject.SetActive(false);
     }
 
     // Update is called once per frame
@@ -79,11 +84,10 @@ public class BirdController : MonoBehaviour
             }
             this.animator.enabled = false;
             var updatedPsn = this.rBody.position;
-            updatedPsn.y++; 
             this.GameOverObject.transform.position = updatedPsn;
             this.GameOverObject.SetActive(true);
-
-            var score = this.rBody.position.x;
+            //this.ScoreObject.transform.position = updatedPsn;
+            //this.ScoreObject.SetActive(true);
 
             if (PlayerPrefs.GetFloat("HighScore") < score)
             {
