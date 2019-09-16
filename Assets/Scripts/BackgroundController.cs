@@ -4,9 +4,10 @@ public class BackgroundController : MonoBehaviour
 {
     private const float GroundSize = 3.33f;
     private const float BackgroundSize = 2.8f;
-    private const float MinPipeAdvance = 25;
+    private const float MinPipeAdvance = 24;
     private const float RandomConst = 0.3f;
-    private float pipeAdvance = 27;
+
+    private float pipeAdvance = 26;
     private int backgroundsCount;
     private float backgroundAdvance;
     private int groundsCount;
