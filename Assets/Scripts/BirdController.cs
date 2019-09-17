@@ -42,6 +42,7 @@ public class BirdController : MonoBehaviour
         {
             GetStarted();
         }
+
         if (this.gamePaused && Input.GetButtonUp("Fire1"))
         {
             this.StartObject.SetActive(false);
@@ -57,17 +58,6 @@ public class BirdController : MonoBehaviour
         {
             PauseGame();
         }
-    }
-
-    private void PauseGame()
-    {
-        Time.timeScale = 0;
-        this.gamePaused = true;
-        var position = this.rBody.transform.position;
-        position.y = 0;
-        position.x++;
-        this.StartObject.transform.position = position;
-        this.StartObject.SetActive(true);
     }
 
     //apply physics
@@ -175,5 +165,15 @@ public class BirdController : MonoBehaviour
             var digitObject = GameObject.Find(num.ToString());
             this.ScoreObjects.Add(digitObject);
         }
+    }
+
+    private void PauseGame()
+    {
+        Time.timeScale = 0;
+        this.gamePaused = true;
+        var position = this.rBody.transform.position;
+        position.y--;
+        this.StartObject.transform.position = position;
+        this.StartObject.SetActive(true);
     }
 }
