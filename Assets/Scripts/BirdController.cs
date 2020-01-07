@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class BirdController : MonoBehaviour
 {
@@ -58,6 +59,12 @@ public class BirdController : MonoBehaviour
         {
             PauseGame();
         }
+
+        //reset game
+        if (isDead && Input.GetButtonDown("Fire1"))
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
     }
 
     //apply physics
@@ -98,26 +105,27 @@ public class BirdController : MonoBehaviour
                 this.rBody.position = position;
             }
 
+            position.y++;
+
+            for (int i = 0; i < this.ScoreObjects.Count; i++)
+            {
+                position.x += ScoreX;
+                this.ScoreObjects[i].transform.position = position;
+            }
+
+            position.y++;
             this.GameOverObject.transform.position = position;
             this.GameOverObject.SetActive(true);
             this.animator.enabled = false;
             this.score = (int)position.x;
-            Time.timeScale = 1;
+            //Time.timeScale = 0.5f;
 
             //Debug.Log(score);
             if (PlayerPrefs.GetFloat("HighScore") < this.score)
             {
                 PlayerPrefs.SetFloat("HighScore", this.score);
             }
-
-            position.y += ScoreY;
             GetScoreObjects();
-            
-            for (int i = 0; i < this.ScoreObjects.Count; i++)
-            {
-                position.x += ScoreX;
-                this.ScoreObjects[i].transform.position = position;
-            }
         }
     }
 
