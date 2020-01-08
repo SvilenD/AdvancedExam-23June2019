@@ -1,18 +1,23 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
 using UnityEngine.SceneManagement;
+
+using System;
+using System.IO;
+using System.Collections.Generic;
 
 public class BirdController : MonoBehaviour
 {
     private const int FlapY = 120;
     private const float FwdSpeed = 60;
-    private const int MaxFlapSpeed = 40;
-    private const float ScoreX = 0.2f;
+    //private const int MaxFlapSpeed = 40;
     private const float ScoreY = 1.8f;
+    private const string DateTimeFormat = "dd/MM/yyyy - hh:mm";
+    private const string HighScoresPath = "highscores.txt";
 
     private Animator animator;
     private Rigidbody2D rBody;
     private bool isStarted;
+    private bool hasScore;
     private bool hasFlapped;
     private bool isDead;
     private bool gamePaused;
@@ -27,12 +32,10 @@ public class BirdController : MonoBehaviour
     public void Start()
     {
         this.animator = this.GetComponent<Animator>();
-        this.animator.enabled = false;
         this.rBody = this.GetComponent<Rigidbody2D>();
         this.rBody.gravityScale = 0;
         this.ScoreObjects = new List<GameObject>();
         this.StartObject = GameObject.FindGameObjectWithTag("Start");
-        DeActivateObjects();
     }
 
     // Update is called once per frame
@@ -59,10 +62,9 @@ public class BirdController : MonoBehaviour
         {
             PauseGame();
         }
-
-        //reset game
         if (isDead && Input.GetButtonDown("Fire1"))
         {
+            Time.timeScale = 1;
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
     }
@@ -94,38 +96,42 @@ public class BirdController : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Floor") || collision.gameObject.CompareTag("Pipe"))
         {
-            this.isDead = true;
-
             var position = this.rBody.position;
+            this.isDead = true;
             Time.timeScale = 0.1f;
 
             for (float i = position.y; i >= -1; i -= 0.1f)
             {
                 position.y = i;
                 this.rBody.position = position;
+                this.rBody.MoveRotation(-30);
             }
 
-            position.y++;
-
-            for (int i = 0; i < this.ScoreObjects.Count; i++)
+            this.animator.enabled = false;
+            if (hasScore == false)
             {
-                position.x += ScoreX;
-                this.ScoreObjects[i].transform.position = position;
+                this.score = (int)position.x;
+                GetScoreObjects(position);
+                this.hasScore = true;
+
+                Debug.Log(score);
+                if (PlayerPrefs.GetFloat("HighScore") < this.score)
+                {
+                    PlayerPrefs.SetFloat("HighScore", this.score);
+                }
+
+                var dateTime = DateTime.Now.ToString(DateTimeFormat);
+                using (StreamWriter writer = (File.Exists(HighScoresPath)) ? File.AppendText(HighScoresPath) : File.CreateText(HighScoresPath))
+                {
+                    writer.WriteLine($"{dateTime} -> Score = {score}");
+                }
             }
 
-            position.y++;
+            position.y += 1.5f;
             this.GameOverObject.transform.position = position;
             this.GameOverObject.SetActive(true);
-            this.animator.enabled = false;
-            this.score = (int)position.x;
-            //Time.timeScale = 0.5f;
 
-            //Debug.Log(score);
-            if (PlayerPrefs.GetFloat("HighScore") < this.score)
-            {
-                PlayerPrefs.SetFloat("HighScore", this.score);
-            }
-            GetScoreObjects();
+            Reset();
         }
     }
 
@@ -133,15 +139,8 @@ public class BirdController : MonoBehaviour
     {
         this.GameOverObject = GameObject.FindGameObjectWithTag("Finish");
         GameOverObject.SetActive(false);
-        this.Digits = GameObject.FindGameObjectsWithTag("Score");
-        var newPsn = this.Digits[0].transform.position;
-        newPsn.x -= 10;
 
-        foreach (var item in this.Digits)
-        {
-            item.transform.position = newPsn;
-            item.SetActive(false);
-        }
+        this.StartObject.SetActive(false);
     }
 
     private void GetStarted()
@@ -149,29 +148,33 @@ public class BirdController : MonoBehaviour
         if (Input.GetButtonDown("Fire1"))
         {
             this.rBody.gravityScale = 1;
+            Time.timeScale = 1;
             this.rBody.AddForce(new Vector2(FwdSpeed, 0));
             this.isStarted = true;
-            this.animator.enabled = true;
-
-            this.StartObject.SetActive(false);
+            DeActivateObjects();
         }
     }
 
-    private void GetScoreObjects()
+    private void GetScoreObjects(Vector2 position)
     {
         var scoreString = this.score.ToString();
-
-        foreach (var item in this.Digits)
-        {
-            item.SetActive(true);
-        }
 
         for (int i = 0; i < scoreString.Length; i++)
         {
             var num = scoreString[i];
 
-            var digitObject = GameObject.Find(num.ToString());
+            var digitObject = Instantiate(GameObject.Find(num.ToString()));
+
             this.ScoreObjects.Add(digitObject);
+        }
+
+        var scoreObjPsn = position;
+        scoreObjPsn.y++;
+
+        foreach (var item in this.ScoreObjects)
+        {
+            scoreObjPsn.x += 0.2f;
+            item.transform.position = scoreObjPsn;
         }
     }
 
@@ -183,5 +186,15 @@ public class BirdController : MonoBehaviour
         position.y--;
         this.StartObject.transform.position = position;
         this.StartObject.SetActive(true);
+    }
+
+    //reset game
+    private void Reset()
+    {
+        if (Input.GetButtonDown("Fire1"))
+        {
+            Time.timeScale = 1;
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
     }
 }
